@@ -38,14 +38,17 @@ func forwardedHeaders(resp *http.Response) (headers http.Header) {
 
 // verify verifies a request with Authelia. If verified, headers will contain the headers to forward with the request to
 // the backend.
-func (a Authelia) verify(ctx context.Context, originalReq *http.Request) (verified bool, headers http.Header, err error) {
+func (a Authelia) verify(originalReq *http.Request) (verified bool, headers http.Header, err error) {
+
+	// Debug log...
+	a.logger.Infow("Performing request to Authelia") // TODO Remove.
 
 	// Clone the original request.
-	req := originalReq.Clone(ctx) // TODO Verify this
+	req := originalReq.Clone(context.Background()) // TODO Verify this.
 
 	// Change the URL of the request so it goes to the Authelia server.
-	req.URL = a.url
 	req.RequestURI = ""
+	req.URL = a.url
 
 	// Set the extra headers for the request.
 	//
@@ -56,6 +59,7 @@ func (a Authelia) verify(ctx context.Context, originalReq *http.Request) (verifi
 	// Perform the request.
 	var resp *http.Response
 	if resp, err = http.DefaultClient.Do(req); err != nil {
+		panic(err.Error()) // TODO Remove.
 		return false, nil, err
 	}
 	defer resp.Body.Close() // Ignore any error.

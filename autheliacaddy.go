@@ -1,7 +1,6 @@
 package autheliacaddy
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,13 +22,14 @@ var (
 	_ caddyhttp.MiddlewareHandler = (*Authelia)(nil)
 )
 
-// TODO
+// init is apart of creating a Caddy v2 module.
 func init() {
 	caddy.RegisterModule(Authelia{})
 	httpcaddyfile.RegisterHandlerDirective("authelia", parseCaddyfileHandler)
 }
 
-// TODO
+// Authelia is a Caddy v2 module that will perform authentication and authorization of requests with a Authelia
+// instance.
 type Authelia struct {
 	VerifyURL  string `json:"url,omitempty"`
 	RawTimeout string `json:"raw_timeout"`
@@ -87,12 +87,8 @@ func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, h
 	//	return handler.ServeHTTP(writer, request)
 	//}
 
-	// Create a context for the request to Authelia.
-	ctx, cancel := context.WithTimeout(context.Background(), a.timeout*time.Second)
-	defer cancel()
-
 	// Authenticate and authorize the request with Authelia.
-	verified, headers, err := a.verify(ctx, request)
+	verified, headers, err := a.verify(request)
 	if err != nil {
 		return fmt.Errorf("failed to verify request with Authelia: %w", err)
 	}
