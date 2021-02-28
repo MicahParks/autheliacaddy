@@ -127,6 +127,10 @@ func (a *Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 		// Get all of the arguments.
 		arguments := d.RemainingArgs()
 
+		a.logger.Infow("",
+			"arguments", arguments,
+		)
+
 		// Confirm all three arguments are present.
 		if len(arguments) != 3 {
 			return d.ArgErr()

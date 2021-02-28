@@ -1,0 +1,21 @@
+version: "3"
+services:
+  authelia:
+    container_name: "authelia"
+    image: "authelia/authelia"
+    volumes:
+      - "./authelia:/config"
+  caddy:
+    build:
+      context: "."
+      dockerfile: "Dockerfile"
+    container_name: "caddy"
+    image: "micahparks/autheliacaddy"
+    ports:
+    - "80:80"
+    - "443:443"
+    volumes:
+    - "./Caddyfile:/etc/caddy/Caddyfile"
+  secure:
+    image: "containous/whoami"
+    container_name: "secure"
