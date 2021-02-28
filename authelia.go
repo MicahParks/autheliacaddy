@@ -58,6 +58,7 @@ func (a Authelia) verify(originalReq *http.Request) (verified bool, headers http
 	// TODO Verify.
 	req.Header.Set(headerHost, a.url.Host)
 	req.Header.Set(headerOriginalURL, req.URL.String())
+	req.Host = a.url.Host
 
 	badLogger.Println("doing: " + litter.Sdump(req))
 	// Perform the request.
