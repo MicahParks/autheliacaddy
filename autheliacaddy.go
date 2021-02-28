@@ -9,25 +9,48 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 )
 
+// TODO
 func init() {
 	caddy.RegisterModule(Authelia{})
 }
 
 // TODO
-type Authelia struct{}
+type Authelia struct {
+	Hostname        string `json:"hostname,omitempty"`
+	Timeout         int    `json:"timeout,omitempty"`
+	timeoutDuration time.Duration
+}
+
+// TODO
+func (a Authelia) CaddyModule() caddy.ModuleInfo {
+	return caddy.ModuleInfo{
+		ID:  "http.handlers.authelia",
+		New: nil, // TODO
+	}
+}
+
+// TODO
+func (a *Authelia) Provision(_ caddy.Context) error {
+
+	// If no timeout was given or it was invalid, default to using a one minute timeout.
+	if a.Timeout <= 0 {
+		a.timeoutDuration = time.Minute
+	} else {
+		a.timeoutDuration = time.Duration(a.Timeout) * time.Second
+	}
+
+	return nil
+}
 
 // TODO
 func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, handler caddyhttp.Handler) error {
 
-	// TODO Get hostname from Caddyfile somehow...
-	autheliaHostname := ""
-
-	// TODO Create a context...
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	// Create a context for the request to Authelia.
+	ctx, cancel := context.WithTimeout(context.Background(), a.timeoutDuration)
 	defer cancel()
 
 	// Authenticate and authorize the request with Authelia.
-	verified, err := verify(ctx, autheliaHostname, http.DefaultClient, request)
+	verified, err := verify(ctx, a.Hostname, http.DefaultClient, request)
 	if err != nil {
 		return err
 	}
@@ -38,15 +61,7 @@ func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, h
 	}
 
 	// Perform a redirect to the Authelia server for authenticate and authorization.
-	http.Redirect(writer, request, autheliaHostname, http.StatusFound)
+	http.Redirect(writer, request, a.Hostname, http.StatusFound)
 
 	return nil
-}
-
-// TODO
-func (a Authelia) CaddyModule() caddy.ModuleInfo {
-	return caddy.ModuleInfo{
-		ID:  "http.handlers.micahparks_authelia",
-		New: nil, // TODO
-	}
 }
