@@ -11,7 +11,7 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 )
 
-// Interface guards
+// Interface guards.
 var (
 	_ caddy.Provisioner           = (*Authelia)(nil)
 	_ caddyfile.Unmarshaler       = (*Authelia)(nil)
