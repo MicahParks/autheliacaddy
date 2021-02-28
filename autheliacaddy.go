@@ -2,7 +2,6 @@ package autheliacaddy
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
@@ -33,9 +32,9 @@ func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, h
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	// Verify the cookie with Authelia.
-	var verified bool
-	if verified, err = verify(ctx, autheliaHostname, http.DefaultClient, request); err != nil {
+	// Authenticate and authorize the request with Authelia.
+	verified, err := verify(ctx, autheliaHostname, http.DefaultClient, request)
+	if err != nil {
 		return err
 	}
 

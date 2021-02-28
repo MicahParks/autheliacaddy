@@ -1,10 +1,9 @@
 package autheliacaddy
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"net/http"
+	"net/url"
 )
 
 const (
@@ -29,27 +28,18 @@ func verify(ctx context.Context, autheliaHostname string, client *http.Client, o
 	// TODO HTTPS?
 	u := "http://" + autheliaHostname + endpointVerify
 
-	// Create the request to verify
-	var req *http.Request
-	if req, err = http.NewRequestWithContext(ctx, http.MethodGet, u, bytes.NewReader(nil)); err != nil {
-		return false, err
-	}
+	// Clone the original request.
+	req := originalReq.Clone(ctx) // TODO Verify this
 
-	// Set the headers for the request.
+	// Set the extra headers for the request.
 	//
 	// TODO Verify.
 	req.Header.Set(headerHost, autheliaHostname)
-	req.Header.Set(headerOriginalURL, originalURL)
+	req.Header.Set(headerOriginalURL, req.URL.String())
 
-	// Copy any authentication cookie from the header.
-	cookie, err := originalReq.Cookie(cookieName)
-	if err != nil {
-		if !errors.Is(err, http.ErrNoCookie) {
-			return false, err
-		}
-	}
-	if cookie != nil {
-		req.AddCookie(cookie)
+	// Change the URL of the request so it goes to the Authelia server.
+	if req.URL, err = url.Parse(u); err != nil {
+		return false, err
 	}
 
 	// Perform the request.
