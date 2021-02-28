@@ -121,8 +121,6 @@ func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, h
 //
 func (a *Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 
-	panic("pull something new")
-
 	// Iterate through the tokens.
 	for d.Next() {
 
@@ -131,7 +129,7 @@ func (a *Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 
 		a.logger.Infow("",
 			"arguments", arguments,
-		)
+		) // TODO Remove.
 
 		// Confirm all three arguments are present.
 		if len(arguments) != 3 {
