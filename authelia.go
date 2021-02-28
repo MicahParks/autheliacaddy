@@ -43,14 +43,15 @@ func (a Authelia) verify(ctx context.Context, originalReq *http.Request) (verifi
 	// Clone the original request.
 	req := originalReq.Clone(ctx) // TODO Verify this
 
+	// Change the URL of the request so it goes to the Authelia server.
+	req.URL = a.url
+	req.RequestURI = ""
+
 	// Set the extra headers for the request.
 	//
 	// TODO Verify.
 	req.Header.Set(headerHost, a.url.Host)
 	req.Header.Set(headerOriginalURL, req.URL.String())
-
-	// Change the URL of the request so it goes to the Authelia server.
-	req.URL = a.url
 
 	// Perform the request.
 	var resp *http.Response
