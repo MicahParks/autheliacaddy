@@ -31,12 +31,12 @@ func init() {
 // Authelia is a Caddy v2 module that will perform authentication and authorization of requests with a Authelia
 // instance.
 type Authelia struct {
-	ServiceURL string `json:"service_url,omitempty"`
-	VerifyURL  string `json:"verify_url,omitempty"`
-	client     *http.Client
-	logger     *zap.SugaredLogger
-	serviceURL *url.URL
-	verifyURL  *url.URL
+	ServiceURL  string `json:"service_url,omitempty"`
+	VerifyURL   string `json:"verify_url,omitempty"`
+	client      *http.Client
+	logger      *zap.SugaredLogger
+	serviceURL  *url.URL
+	autheliaURL *url.URL
 }
 
 // CaddyModule implements the caddy.Module interface. It creates a new Authelia module.
@@ -62,7 +62,7 @@ func (a *Authelia) Provision(ctx caddy.Context) error {
 
 	// Turn the raw verification URL into the correct Go type.
 	var err error
-	if a.verifyURL, err = url.Parse(a.VerifyURL); err != nil {
+	if a.autheliaURL, err = url.Parse(a.VerifyURL); err != nil {
 		return fmt.Errorf("failed to parse Authelia verification URL: %w", err)
 	}
 

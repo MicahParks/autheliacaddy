@@ -11,6 +11,9 @@ import (
 
 const (
 
+	// endpointVerify is the path to the endpoint that authenticate and authorizes requests with Authelia.
+	endpointVerify = "/api/verify"
+
 	// headerHost is the name of the header that contains the host and port of the server in which the original request
 	// was sent to.
 	headerHost = "Host"
@@ -51,8 +54,10 @@ func (a Authelia) verify(originalReq *http.Request) (verified bool, headers http
 	req := originalReq.Clone(context.Background()) // TODO Verify this.
 
 	// Change the URL of the request so it goes to the Authelia server.
-	req.RequestURI = "" // TODO Need to change this to something in verifyURL?
-	req.URL = a.verifyURL
+	req.RequestURI = "" // TODO Need to change this to something in autheliaURL?
+	if req.URL, err = a.autheliaURL.Parse(endpointVerify); err != nil {
+		return false, nil, err
+	}
 
 	// Parse the original URL's path in relation to the service URL.
 	var redirect *url.URL
@@ -61,9 +66,9 @@ func (a Authelia) verify(originalReq *http.Request) (verified bool, headers http
 	}
 
 	// Set the extra headers for the request.
-	req.Header.Set(headerHost, a.verifyURL.Host)
+	req.Header.Set(headerHost, a.autheliaURL.Host)
 	req.Header.Set(headerOriginalURL, redirect.String())
-	req.Host = a.verifyURL.Host
+	req.Host = a.autheliaURL.Host
 
 	// Set the redirect for the URL query.
 	//

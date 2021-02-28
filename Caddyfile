@@ -1,6 +1,6 @@
 terseurl.com {
     route {
-        authelia https://authelia.terseurl.com/api/verify https://terseurl.com
+        authelia https://authelia.terseurl.com https://terseurl.com
         reverse_proxy http://secure:80 {
             header_up X-Forwarded-Host {http.request.remote_host}
         }
