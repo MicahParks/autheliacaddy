@@ -13,6 +13,7 @@ import (
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	"go.uber.org/zap"
 )
 
 // Interface guards.
@@ -33,11 +34,12 @@ type Authelia struct {
 	Prefix     string `json:"prefix"`
 	VerifyURL  string `json:"url,omitempty"`
 	RawTimeout string `json:"raw_timeout"`
+	logger     *zap.SugaredLogger
 	timeout    time.Duration
 	url        *url.URL
 }
 
-// TODO
+// CaddyModule implements the caddy.Module interface. It creates a new Authelia module.
 func (a Authelia) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
 		ID:  "http.handlers.authelia",
@@ -45,8 +47,11 @@ func (a Authelia) CaddyModule() caddy.ModuleInfo {
 	}
 }
 
-// TODO
+// Provision implements the caddy.Provisioner interface. It does work before the module can be used.
 func (a *Authelia) Provision(ctx caddy.Context) error {
+
+	// Add the logger.
+	a.logger = ctx.Logger(a).Sugar()
 
 	// Turn the raw URL into the correct Go type.
 	var err error
@@ -73,7 +78,8 @@ func (a *Authelia) Provision(ctx caddy.Context) error {
 	return nil
 }
 
-// TODO
+// ServeHTTP implements the caddyhttp.MiddlewareHandler interface. It serves as an HTTP middleware to authenticate
+// requests to Authelia.
 func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, handler caddyhttp.Handler) error {
 
 	// Determine if the request has the required prefix.

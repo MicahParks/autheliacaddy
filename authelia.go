@@ -36,8 +36,8 @@ func forwardedHeaders(resp *http.Response) (headers http.Header) {
 	return headers
 }
 
-// TODO
-// hostname should not have an http prefix.
+// verify verifies a request with Authelia. If verified, headers will contain the headers to forward with the request to
+// the backend.
 func (a Authelia) verify(ctx context.Context, originalReq *http.Request) (verified bool, headers http.Header, err error) {
 
 	// Clone the original request.
@@ -67,7 +67,9 @@ func (a Authelia) verify(ctx context.Context, originalReq *http.Request) (verifi
 	case 401:
 		verified = false
 	default:
-		// TODO
+		a.logger.Warnw("Unhandled HTTP status code.",
+			"code", resp.StatusCode,
+		)
 	}
 
 	return verified, headers, nil
