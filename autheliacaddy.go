@@ -8,6 +8,7 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
+	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 )
 
@@ -21,6 +22,7 @@ var (
 // TODO
 func init() {
 	caddy.RegisterModule(Authelia{})
+	httpcaddyfile.RegisterHandlerDirective("authelia", parseCaddyfileHandler)
 }
 
 // TODO
@@ -42,7 +44,7 @@ func (a Authelia) CaddyModule() caddy.ModuleInfo {
 func (a *Authelia) Provision(ctx caddy.Context) error {
 
 	// If no timeout was given or it was invalid, default to using a one minute timeout.
-	if a.Timeout <= 0 {
+	if a.Timeout <= 0 { // TODO Try uint type for Timeout.
 		ctx.Logger(a).Sugar().Infow("Given timeout for Authelia was invalid. Defaulting to one minute.",
 			"timeout", a.Timeout,
 		) // TODO Remove?
@@ -87,8 +89,15 @@ func (a Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 
 	// Iterate through the tokens.
 	for d.Next() {
-		// TODO
+		d.RemainingArgs()
 	}
 
 	return nil
+}
+
+// parseCaddyfileHandler unmarshals tokens from h into a new middleware handler value.
+func parseCaddyfileHandler(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error) {
+	var a Authelia
+	err := a.UnmarshalCaddyfile(h.Dispenser)
+	return a, err
 }
