@@ -33,6 +33,7 @@ func init() {
 type Authelia struct {
 	ServiceURL string `json:"service_url,omitempty"`
 	VerifyURL  string `json:"verify_url,omitempty"`
+	client     *http.Client
 	logger     *zap.SugaredLogger
 	serviceURL *url.URL
 	verifyURL  *url.URL
@@ -51,6 +52,13 @@ func (a *Authelia) Provision(ctx caddy.Context) error {
 
 	// Add the logger.
 	a.logger = ctx.Logger(a).Sugar()
+
+	// Create the HTTP client. Do not follow redirects.
+	a.client = &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 
 	// Turn the raw verification URL into the correct Go type.
 	var err error

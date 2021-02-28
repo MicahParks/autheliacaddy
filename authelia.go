@@ -66,6 +66,8 @@ func (a Authelia) verify(originalReq *http.Request) (verified bool, headers http
 	req.Host = a.verifyURL.Host
 
 	// Set the redirect for the URL query.
+	//
+	// TODO Delete this. I don't think it matters...
 	query := req.URL.Query()
 	query.Set("rd", redirect.String())
 	req.URL.RawQuery = query.Encode()
@@ -74,7 +76,7 @@ func (a Authelia) verify(originalReq *http.Request) (verified bool, headers http
 
 	// Perform the request.
 	var resp *http.Response
-	if resp, err = http.DefaultClient.Do(req); err != nil {
+	if resp, err = a.client.Do(req); err != nil {
 		panic(err.Error()) // TODO Remove.
 		return false, nil, err
 	}
