@@ -3,6 +3,7 @@ package autheliacaddy
 import (
 	"fmt"
 	"github.com/sanity-io/litter"
+	badLogger "log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -82,7 +83,7 @@ func (a *Authelia) Provision(ctx caddy.Context) error {
 // requests to Authelia.
 func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, handler caddyhttp.Handler) error {
 
-	a.logger.Info(litter.Sdump(request)) // TODO Remove.
+	badLogger.Println(litter.Sdump(request)) // TODO Remove.
 
 	// Do not match any requests to the Authelia server to prevent a loop.
 	if request.URL.Host != a.url.Host {
