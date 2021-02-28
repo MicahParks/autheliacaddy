@@ -83,8 +83,15 @@ func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, h
 
 	// Do not match any requests to the Authelia server to prevent a loop.
 	if request.URL.Host != a.url.Host {
+		a.logger.Infow("Not sending request to Authelia.",
+			"url", request.URL.String(),
+		) // TODO Remove.
 		return handler.ServeHTTP(writer, request)
 	}
+
+	a.logger.Infow("Sending request to Authelia.",
+		"url", request.URL.String(),
+	) // TODO Remove.
 
 	// Authenticate and authorize the request with Authelia.
 	verified, headers, err := a.verify(request)
