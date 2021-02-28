@@ -25,15 +25,16 @@ type Authelia struct {
 func (a Authelia) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
 		ID:  "http.handlers.authelia",
-		New: nil, // TODO
+		New: func() caddy.Module { return new(Authelia) },
 	}
 }
 
 // TODO
-func (a *Authelia) Provision(_ caddy.Context) error {
+func (a *Authelia) Provision(ctx caddy.Context) error {
 
 	// If no timeout was given or it was invalid, default to using a one minute timeout.
 	if a.Timeout <= 0 {
+		ctx.Logger(a).Sugar().Infow("Given timeout for Authelia was invalid. Defaulting to one minute.")
 		a.timeoutDuration = time.Minute
 	} else {
 		a.timeoutDuration = time.Duration(a.Timeout) * time.Second
