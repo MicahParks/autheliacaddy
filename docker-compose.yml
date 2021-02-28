@@ -12,10 +12,15 @@ services:
     container_name: "caddy"
     image: "micahparks/autheliacaddy"
     ports:
-    - "80:80"
-    - "443:443"
+      - "80:80"
+      - "443:443"
     volumes:
-    - "./Caddyfile:/etc/caddy/Caddyfile"
+      - "./Caddyfile:/etc/caddy/Caddyfile"
+      - "caddy:/data"
+      - "caddyConfig:/config"
   secure:
     image: "containous/whoami"
     container_name: "secure"
+volumes:
+  caddy:
+  caddyConfig:

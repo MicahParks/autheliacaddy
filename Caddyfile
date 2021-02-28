@@ -1,10 +1,10 @@
-localhost {
+terseurl.com {
     route {
-        authelia https://authelia.localhost:9091/api/verify 100000000000000000
+        authelia https://authelia.terseurl.com/api/verify 100000000000000000
         reverse_proxy http://secure:80
     }
 }
 
-authelia.localhost {
-    reverse_proxy http://authelina:9091
+authelia.terseurl.com {
+    reverse_proxy http://authelia:9091
 }
