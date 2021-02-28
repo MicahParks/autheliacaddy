@@ -13,6 +13,7 @@ import (
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	"github.com/prometheus/common/log"
 	"go.uber.org/zap"
 )
 
@@ -127,9 +128,7 @@ func (a *Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 		// Get all of the arguments.
 		arguments := d.RemainingArgs()
 
-		a.logger.Infow("",
-			"arguments", arguments,
-		) // TODO Remove.
+		log.Infof("arguments: %v", arguments) // TODO Remove.
 
 		// Confirm all three arguments are present.
 		if len(arguments) != 3 {
