@@ -2,7 +2,10 @@ package autheliacaddy
 
 import (
 	"context"
+	badLogger "log"
 	"net/http"
+
+	"github.com/sanity-io/litter"
 )
 
 const (
@@ -56,6 +59,7 @@ func (a Authelia) verify(originalReq *http.Request) (verified bool, headers http
 	req.Header.Set(headerHost, a.url.Host)
 	req.Header.Set(headerOriginalURL, req.URL.String())
 
+	badLogger.Println("doing: " + litter.Sdump(req))
 	// Perform the request.
 	var resp *http.Response
 	if resp, err = http.DefaultClient.Do(req); err != nil {

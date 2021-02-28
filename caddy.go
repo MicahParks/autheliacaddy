@@ -2,7 +2,6 @@ package autheliacaddy
 
 import (
 	"fmt"
-	"github.com/sanity-io/litter"
 	badLogger "log"
 	"net/http"
 	"net/url"
@@ -14,6 +13,7 @@ import (
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/prometheus/common/log"
+	"github.com/sanity-io/litter"
 	"go.uber.org/zap"
 )
 
