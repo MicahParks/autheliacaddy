@@ -85,14 +85,14 @@ func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, h
 
 	badLogger.Println(litter.Sdump(request)) // TODO Remove.
 
-	// Do not match any requests to the Authelia server to prevent a loop.
-	if request.URL.Host != a.url.Host {
-		a.logger.Infow("Not sending request to Authelia.",
-			"host", request.URL.Host,
-			"url", request.URL.String(),
-		) // TODO Remove.
-		return handler.ServeHTTP(writer, request)
-	}
+	//// Do not match any requests to the Authelia server to prevent a loop.
+	//if request.URL.Host != a.url.Host {
+	//	a.logger.Infow("Not sending request to Authelia.",
+	//		"host", request.URL.Host,
+	//		"url", request.URL.String(),
+	//	) // TODO Remove.
+	//	return handler.ServeHTTP(writer, request)
+	//}
 
 	a.logger.Infow("Sending request to Authelia.",
 		"host", request.URL.Host,
