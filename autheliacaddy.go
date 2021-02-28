@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
@@ -27,9 +30,11 @@ func init() {
 
 // TODO
 type Authelia struct {
-	Hostname        string `json:"hostname,omitempty"`
-	Timeout         int    `json:"timeout,omitempty"`
-	timeoutDuration time.Duration
+	Prefix     string `json:"prefix"`
+	VerifyURL  string `json:"url,omitempty"`
+	RawTimeout string `json:"raw_timeout"`
+	timeout    time.Duration
+	url        *url.URL
 }
 
 // TODO
@@ -43,14 +48,26 @@ func (a Authelia) CaddyModule() caddy.ModuleInfo {
 // TODO
 func (a *Authelia) Provision(ctx caddy.Context) error {
 
+	// Turn the raw URL into the correct Go type.
+	var err error
+	if a.url, err = url.Parse(a.VerifyURL); err != nil {
+		return fmt.Errorf("failed to parse Authelia URL: %w", err)
+	}
+
+	// Parse the timeout as an unsigned integer.
+	timeout, err := strconv.ParseInt(a.RawTimeout, 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to parse timeout as quatity of seconds: %s", a.RawTimeout)
+	}
+
 	// If no timeout was given or it was invalid, default to using a one minute timeout.
-	if a.Timeout <= 0 { // TODO Try uint type for Timeout.
+	if timeout <= 0 {
 		ctx.Logger(a).Sugar().Infow("Given timeout for Authelia was invalid. Defaulting to one minute.",
-			"timeout", a.Timeout,
+			"timeout", timeout,
 		) // TODO Remove?
-		a.timeoutDuration = time.Minute
+		a.timeout = time.Minute
 	} else {
-		a.timeoutDuration = time.Duration(a.Timeout) * time.Second
+		a.timeout = time.Duration(timeout) * time.Second
 	}
 
 	return nil
@@ -59,37 +76,60 @@ func (a *Authelia) Provision(ctx caddy.Context) error {
 // TODO
 func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, handler caddyhttp.Handler) error {
 
+	// Determine if the request has the required prefix.
+	if !strings.HasPrefix(request.URL.Path, a.Prefix) {
+		return handler.ServeHTTP(writer, request)
+	}
+
 	// Create a context for the request to Authelia.
-	ctx, cancel := context.WithTimeout(context.Background(), a.timeoutDuration)
+	ctx, cancel := context.WithTimeout(context.Background(), a.timeout*time.Second)
 	defer cancel()
 
 	// Authenticate and authorize the request with Authelia.
-	verified, err := verify(ctx, a.Hostname, http.DefaultClient, request)
+	verified, headers, err := a.verify(ctx, request)
 	if err != nil {
 		return fmt.Errorf("failed to verify request with Authelia: %w", err)
 	}
 
-	// The request is authenticate and authorized, according to Authelia. Let it through.
+	// The request is authenticate and authorized, according to Authelia.
 	if verified {
-		// TODO Add Remote-* headers from verify function.
+
+		// Add the forwarded headers to the request.
+		for key := range headers {
+			request.Header.Set(key, headers.Get(key))
+		}
+
+		// Let the request go on to the next handler.
 		return handler.ServeHTTP(writer, request)
 	}
 
 	// Perform a redirect to the Authelia server for authenticate and authorization.
-	http.Redirect(writer, request, a.Hostname, http.StatusFound)
+	http.Redirect(writer, request, a.VerifyURL, http.StatusFound)
 
 	return nil
 }
 
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler. Syntax:
 //
-//     authelia [<prefix>] <hostname> <timeout>
+//     authelia <prefix> <verify_url> <timeout>
 //
-func (a Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
+func (a *Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 
 	// Iterate through the tokens.
 	for d.Next() {
-		d.RemainingArgs()
+
+		// Get all of the arguments.
+		arguments := d.RemainingArgs()
+
+		// Confirm all three arguments are present.
+		if len(arguments) != 3 {
+			return d.ArgErr()
+		}
+
+		// Assign the arguments to the data structure.
+		a.Prefix = arguments[0]
+		a.VerifyURL = arguments[1]
+		a.RawTimeout = arguments[2]
 	}
 
 	return nil
