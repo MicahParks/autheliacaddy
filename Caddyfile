@@ -1,5 +1,6 @@
 localhost
 
-reverse_proxy http://secure:80
-
-authelia http://authelia:9091/api/verify 10
+route {
+    authelia http://authelia:9091/api/verify 10
+    reverse_proxy http://secure:80
+}
