@@ -5,8 +5,6 @@ import (
 	badLogger "log"
 	"net/http"
 	"net/url"
-	"strconv"
-	"time"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -33,11 +31,11 @@ func init() {
 // Authelia is a Caddy v2 module that will perform authentication and authorization of requests with a Authelia
 // instance.
 type Authelia struct {
-	VerifyURL  string `json:"url,omitempty"`
-	RawTimeout string `json:"raw_timeout"`
+	ServiceURL string `json:"service_url,omitempty"`
+	VerifyURL  string `json:"verify_url,omitempty"`
 	logger     *zap.SugaredLogger
-	timeout    time.Duration
-	url        *url.URL
+	serviceURL *url.URL
+	verifyURL  *url.URL
 }
 
 // CaddyModule implements the caddy.Module interface. It creates a new Authelia module.
@@ -54,26 +52,15 @@ func (a *Authelia) Provision(ctx caddy.Context) error {
 	// Add the logger.
 	a.logger = ctx.Logger(a).Sugar()
 
-	// Turn the raw URL into the correct Go type.
+	// Turn the raw verification URL into the correct Go type.
 	var err error
-	if a.url, err = url.Parse(a.VerifyURL); err != nil {
-		return fmt.Errorf("failed to parse Authelia URL: %w", err)
+	if a.verifyURL, err = url.Parse(a.VerifyURL); err != nil {
+		return fmt.Errorf("failed to parse Authelia verification URL: %w", err)
 	}
 
-	// Parse the timeout as an unsigned integer.
-	timeout, err := strconv.ParseInt(a.RawTimeout, 10, 64)
-	if err != nil {
-		return fmt.Errorf("failed to parse timeout as quatity of seconds: %s", a.RawTimeout)
-	}
-
-	// If no timeout was given or it was invalid, default to using a one minute timeout.
-	if timeout <= 0 {
-		ctx.Logger(a).Sugar().Infow("Given timeout for Authelia was invalid. Defaulting to one minute.",
-			"timeout", timeout,
-		) // TODO Remove?
-		a.timeout = time.Minute
-	} else {
-		a.timeout = time.Duration(timeout) * time.Second
+	// Turn the raw service URL into the correct Go type.
+	if a.serviceURL, err = url.Parse(a.ServiceURL); err != nil {
+		return fmt.Errorf("failed to parse service (protected by Authelia) verification URL: %w", err)
 	}
 
 	return nil
@@ -125,7 +112,7 @@ func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, h
 
 // UnmarshalCaddyfile implements caddyfile.Unmarshaler. Syntax:
 //
-//     authelia <prefix> <verify_url> <timeout>
+//     authelia <verify_url> <service_url>
 //
 func (a *Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 
@@ -144,7 +131,7 @@ func (a *Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 
 		// Assign the arguments to the data structure.
 		a.VerifyURL = arguments[0]
-		a.RawTimeout = arguments[1]
+		a.ServiceURL = arguments[1]
 	}
 
 	return nil

@@ -1,6 +1,6 @@
 terseurl.com {
     route {
-        authelia https://authelia.terseurl.com/api/verify 100000000000000000
+        authelia https://authelia.terseurl.com/api/verify https://terseurl.com
         reverse_proxy http://secure:80
     }
 }

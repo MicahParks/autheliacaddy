@@ -4,6 +4,7 @@ import (
 	"context"
 	badLogger "log"
 	"net/http"
+	"net/url"
 
 	"github.com/sanity-io/litter"
 )
@@ -50,17 +51,27 @@ func (a Authelia) verify(originalReq *http.Request) (verified bool, headers http
 	req := originalReq.Clone(context.Background()) // TODO Verify this.
 
 	// Change the URL of the request so it goes to the Authelia server.
-	req.RequestURI = ""
-	req.URL = a.url
+	req.RequestURI = "" // TODO Need to change this to something in verifyURL?
+	req.URL = a.verifyURL
+
+	// Parse the original URL's path in relation to the service URL.
+	var redirect *url.URL
+	if redirect, err = a.serviceURL.Parse(originalReq.URL.Path); err != nil {
+		return false, nil, err
+	}
 
 	// Set the extra headers for the request.
-	//
-	// TODO Verify.
-	req.Header.Set(headerHost, a.url.Host)
-	req.Header.Set(headerOriginalURL, req.URL.String())
-	req.Host = a.url.Host
+	req.Header.Set(headerHost, a.verifyURL.Host)
+	req.Header.Set(headerOriginalURL, redirect.String())
+	req.Host = a.verifyURL.Host
 
-	badLogger.Println("doing: " + litter.Sdump(req))
+	// Set the redirect for the URL query.
+	query := req.URL.Query()
+	query.Set("rd", redirect.String())
+	req.URL.RawQuery = query.Encode()
+
+	badLogger.Println("doing: " + litter.Sdump(req)) // TODO Remove.
+
 	// Perform the request.
 	var resp *http.Response
 	if resp, err = http.DefaultClient.Do(req); err != nil {
