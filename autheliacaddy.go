@@ -9,12 +9,6 @@ import (
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 )
 
-const (
-
-	// cookieName is the name of the cookie that authelia uses.
-	cookieName = "authelia"
-)
-
 func init() {
 	caddy.RegisterModule(Authelia{})
 }
@@ -38,12 +32,13 @@ func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, h
 		return err
 	}
 
-	// TODO
+	// The request is authenticate and authorized, according to Authelia. Let it through.
 	if verified {
-
-	} else {
-
+		return handler.ServeHTTP(writer, request)
 	}
+
+	// Perform a redirect to the Authelia server for authenticate and authorization.
+	http.Redirect(writer, request, autheliaHostname, http.StatusFound)
 
 	return nil
 }
