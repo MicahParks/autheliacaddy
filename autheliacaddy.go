@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
@@ -32,7 +31,6 @@ func init() {
 
 // TODO
 type Authelia struct {
-	Prefix     string `json:"prefix"`
 	VerifyURL  string `json:"url,omitempty"`
 	RawTimeout string `json:"raw_timeout"`
 	logger     *zap.SugaredLogger
@@ -83,10 +81,11 @@ func (a *Authelia) Provision(ctx caddy.Context) error {
 // requests to Authelia.
 func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, handler caddyhttp.Handler) error {
 
-	// Determine if the request has the required prefix.
-	if !strings.HasPrefix(request.URL.Path, a.Prefix) {
-		return handler.ServeHTTP(writer, request)
-	}
+	// TODO Determine if Caddy natively supports prefix matching.
+	//// Determine if the request has the required prefix.
+	//if !strings.HasPrefix(request.URL.Path, a.Prefix) {
+	//	return handler.ServeHTTP(writer, request)
+	//}
 
 	// Create a context for the request to Authelia.
 	ctx, cancel := context.WithTimeout(context.Background(), a.timeout*time.Second)
@@ -131,14 +130,13 @@ func (a *Authelia) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 		log.Infof("arguments: %v", arguments) // TODO Remove.
 
 		// Confirm all three arguments are present.
-		if len(arguments) != 3 {
+		if len(arguments) != 2 {
 			return d.ArgErr()
 		}
 
 		// Assign the arguments to the data structure.
-		a.Prefix = arguments[0]
-		a.VerifyURL = arguments[1]
-		a.RawTimeout = arguments[2]
+		a.VerifyURL = arguments[0]
+		a.RawTimeout = arguments[1]
 	}
 
 	return nil
