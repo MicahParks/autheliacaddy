@@ -81,11 +81,10 @@ func (a *Authelia) Provision(ctx caddy.Context) error {
 // requests to Authelia.
 func (a Authelia) ServeHTTP(writer http.ResponseWriter, request *http.Request, handler caddyhttp.Handler) error {
 
-	// TODO Determine if Caddy natively supports prefix matching.
-	//// Determine if the request has the required prefix.
-	//if !strings.HasPrefix(request.URL.Path, a.Prefix) {
-	//	return handler.ServeHTTP(writer, request)
-	//}
+	// Do not match any requests to the Authelia server to prevent a loop.
+	if request.URL.Host != a.url.Host {
+		return handler.ServeHTTP(writer, request)
+	}
 
 	// Authenticate and authorize the request with Authelia.
 	verified, headers, err := a.verify(request)
